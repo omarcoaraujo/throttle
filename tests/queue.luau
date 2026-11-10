@@ -27,13 +27,13 @@ end
 -- send
 function spec.should_return_nothing_without_await()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 60 }
 
 	assert(send { payload = "a" } == nil)
 	assert(#calls == 0)
-	
+
 	fake.advance(0)
 	assert(#calls == 1)
 	assert(calls[1] == "a")
@@ -41,7 +41,7 @@ end
 
 function spec.should_return_ok_and_result_with_await()
 	setup()
-	
+
 	const send = queue.create { handler = recorder {}, rate_per_minute = 60 }
 	local ok: boolean? = nil
 	local result: any = nil
@@ -57,7 +57,7 @@ end
 
 function spec.should_pass_the_key_to_the_handler()
 	setup()
-	
+
 	local seen: string? = nil
 	const send = queue.create {
 		handler = function(payload: any, key: string?)
@@ -74,41 +74,41 @@ end
 -- order and budget
 function spec.should_send_in_arrival_order()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 60 }
 
 	send { payload = "a" }
 	send { payload = "b" }
 	send { payload = "c" }
-	
+
 	fake.advance(0)
 	assert(table.concat(calls, ",") == "a,b,c")
 end
 
 function spec.should_respect_the_rate_of_the_queue()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 2 }
 
 	send { payload = 1 }
 	send { payload = 2 }
 	send { payload = 3 }
-	
+
 	fake.advance(0)
 	assert(#calls == 2)
-	
+
 	fake.advance(59)
 	assert(#calls == 2)
-	
+
 	fake.advance(1)
 	assert(#calls == 3)
 end
 
 function spec.should_share_a_budget_between_queues()
 	setup()
-	
+
 	const pool = budget.create(1)
 	const calls = {}
 
@@ -128,10 +128,10 @@ function spec.should_share_a_budget_between_queues()
 
 	first { payload = 1 }
 	second { payload = 2 }
-	
+
 	fake.advance(0)
 	assert(table.concat(calls, ",") == "one")
-	
+
 	fake.advance(60)
 	assert(table.concat(calls, ",") == "one,two")
 end
@@ -140,7 +140,7 @@ end
 function spec.should_retry_with_exponential_backoff()
 	setup()
 	fake.set_random(0)
-	
+
 	local attempts = 0
 	const send = queue.create {
 		handler = function()
@@ -154,26 +154,26 @@ function spec.should_retry_with_exponential_backoff()
 
 	local ok: boolean? = nil
 	local result: any = nil
-	
+
 	fake.spawn(function()
 		ok, result = send { payload = 1, await = true }
 	end)
 
 	fake.advance(0)
 	assert(attempts == 1)
-	
+
 	fake.advance(0.5)
 	assert(attempts == 1)
-	
+
 	fake.advance(0.5)
 	assert(attempts == 2)
-	
+
 	fake.advance(1.5)
 	assert(attempts == 2)
-	
+
 	fake.advance(0.5)
 	assert(attempts == 3)
-	
+
 	assert(ok == true)
 	assert(result == "ok")
 end
@@ -181,7 +181,7 @@ end
 function spec.should_cap_the_backoff_at_thirty_seconds()
 	setup()
 	fake.set_random(0)
-	
+
 	local attempts = 0
 	const send = queue.create {
 		handler = function()
@@ -195,10 +195,10 @@ function spec.should_cap_the_backoff_at_thirty_seconds()
 	send { payload = 1 }
 	fake.advance(0)
 	fake.advance(31)
-	
+
 	assert(attempts == 6)
 	fake.advance(29)
-	
+
 	assert(attempts == 6)
 	fake.advance(1)
 	assert(attempts == 7)
@@ -207,7 +207,7 @@ end
 function spec.should_add_jitter_to_the_backoff()
 	setup()
 	fake.set_random(1)
-	
+
 	local attempts = 0
 	const send = queue.create {
 		handler = function()
@@ -220,7 +220,7 @@ function spec.should_add_jitter_to_the_backoff()
 	send { payload = 1 }
 	fake.advance(0)
 	fake.advance(1)
-	
+
 	assert(attempts == 1)
 	fake.advance(0.25)
 	assert(attempts == 2)
@@ -228,7 +228,7 @@ end
 
 function spec.should_return_the_last_error_when_every_attempt_failed()
 	setup()
-	
+
 	fake.set_random(0)
 	const send = queue.create {
 		handler = function()
@@ -246,7 +246,7 @@ function spec.should_return_the_last_error_when_every_attempt_failed()
 
 	fake.advance(0)
 	fake.advance(1)
-	
+
 	assert(ok == false)
 	assert(result == "boom")
 end
@@ -254,7 +254,7 @@ end
 function spec.should_try_three_times_by_default()
 	setup()
 	fake.set_random(0)
-	
+
 	local attempts = 0
 	const send = queue.create {
 		handler = function()
@@ -274,10 +274,10 @@ end
 function spec.should_hold_later_entries_while_one_is_retrying()
 	setup()
 	fake.set_random(0)
-	
+
 	const calls = {}
 	local failed_once = false
-	
+
 	const send = queue.create {
 		handler = function(payload: any)
 			table.insert(calls, payload)
@@ -291,10 +291,10 @@ function spec.should_hold_later_entries_while_one_is_retrying()
 
 	send { payload = "a" }
 	send { payload = "b" }
-	
+
 	fake.advance(0)
 	assert(table.concat(calls, ",") == "a")
-	
+
 	fake.advance(1)
 	assert(table.concat(calls, ",") == "a,a,b")
 end
@@ -302,20 +302,20 @@ end
 -- merge
 function spec.should_merge_entries_with_the_same_key()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 60 }
 
 	send { payload = 1, key = "k" }
 	send { payload = 2, key = "k" }
-	
+
 	fake.advance(0)
 	assert(table.concat(calls, ",") == "2")
 end
 
 function spec.should_give_merged_waiters_the_same_result()
 	setup()
-	
+
 	const send = queue.create { handler = recorder {}, rate_per_minute = 60 }
 	const outcomes = {} :: { { ok: boolean?, result: any } }
 
@@ -331,28 +331,28 @@ function spec.should_give_merged_waiters_the_same_result()
 
 	fake.advance(0)
 	assert(#outcomes == 2)
-	
+
 	assert(outcomes[1].ok == true and outcomes[1].result == "done:2")
 	assert(outcomes[2].ok == true and outcomes[2].result == "done:2")
 end
 
 function spec.should_keep_the_place_of_a_merged_entry()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 60 }
 
 	send { payload = "a", key = "a" }
 	send { payload = "b" }
 	send { payload = "a2", key = "a" }
-	
+
 	fake.advance(0)
 	assert(table.concat(calls, ",") == "a2,b")
 end
 
 function spec.should_not_merge_with_an_entry_being_sent()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create {
 		handler = function(payload: any)
@@ -364,7 +364,7 @@ function spec.should_not_merge_with_an_entry_being_sent()
 
 	send { payload = 1, key = "k" }
 	fake.advance(0)
-	
+
 	send { payload = 2, key = "k" }
 	fake.advance(10)
 	assert(table.concat(calls, ",") == "1,2")
@@ -373,7 +373,7 @@ end
 -- size
 function spec.should_drop_the_oldest_when_full()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), max_size = 2, rate_per_minute = 60 }
 	local ok: boolean? = nil
@@ -385,17 +385,17 @@ function spec.should_drop_the_oldest_when_full()
 
 	send { payload = "b" }
 	send { payload = "c" }
-	
+
 	assert(ok == false)
 	assert(result == "dropped")
-	
+
 	fake.advance(0)
 	assert(table.concat(calls, ",") == "b,c")
 end
 
 function spec.should_never_drop_without_max_size()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 60 }
 
@@ -410,10 +410,10 @@ end
 -- shutdown
 function spec.should_answer_closed_after_shutdown_started()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 60 }
-	
+
 	queue.shutdown(25)
 	local ok: boolean? = nil
 	local result: any = nil
@@ -424,7 +424,7 @@ function spec.should_answer_closed_after_shutdown_started()
 
 	send { payload = 2 }
 	fake.advance(0)
-	
+
 	assert(ok == false)
 	assert(result == "closed")
 	assert(#calls == 0)
@@ -432,14 +432,14 @@ end
 
 function spec.should_keep_sending_while_shutting_down()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 60 }
-	
+
 	send { payload = 1 }
 	send { payload = 2 }
 	send { payload = 3 }
-	
+
 	local done = false
 	fake.spawn(function()
 		queue.shutdown(25)
@@ -453,13 +453,13 @@ end
 
 function spec.should_give_up_at_the_shutdown_deadline()
 	setup()
-	
+
 	const calls = {}
 	const send = queue.create { handler = recorder(calls), rate_per_minute = 1 }
-	
+
 	send { payload = "a" }
 	send { payload = "b" }
-	
+
 	local done = false
 	fake.spawn(function()
 		queue.shutdown(25)

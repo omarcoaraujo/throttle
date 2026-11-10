@@ -102,10 +102,10 @@ const function install()
 	scheduler.use {
 		now = now,
 		wait = wait,
-		
+
 		delay = delay,
 		defer = defer,
-		
+
 		resume = resume,
 		random = random,
 		on_close = on_close,
@@ -116,7 +116,7 @@ end
 return table.freeze {
 	install = install,
 	advance = advance,
-	
+
 	spawn = run_thread,
 	now = now,
 	set_random = set_random,
