@@ -1,0 +1,5 @@
+[tools]
+stylua = "JohnnyMorganz/StyLua@2.5.2"
+luau-lsp = "JohnnyMorganz/luau-lsp@1.68.1"
+lute = "luau-lang/lute@1.0.0"
+rojo = "rojo-rbx/rojo@7.7.0"

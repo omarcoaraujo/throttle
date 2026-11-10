@@ -1,0 +1,24 @@
+# Pesde
+/luau_packages/
+/roblox_packages/
+
+# Lock Files
+**/*.lock*
+
+# Build
+/build/
+
+# Environment
+.env
+
+# Tooling
+sourcemap.json
+globalTypes.d.luau
+
+# Claude
+CLAUDE.md
+.claude
+TODO.md
+
+# pesde dry run
+/package.tar.gz

@@ -1,0 +1,15 @@
+name = "omarcoaraujo/throttle"
+version = "0.1.0"
+description = "Rate limiting for Luau: a request queue that respects a shared budget, plus cooldown and settle"
+license = "MIT"
+authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
+repository = "https://github.com/omarcoaraujo/throttle"
+includes = ["pesde.toml", "README.md", "LICENSE", "src/**/*"]
+
+[target]
+environment = "roblox"
+lib = "src/init.luau"
+build_files = ["src"]
+
+[indices]
+default = "https://github.com/pesde-pkg/index"
