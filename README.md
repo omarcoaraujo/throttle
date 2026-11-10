@@ -155,6 +155,15 @@ The second call is ignored, whatever its arguments. Timers are forgotten once th
 - There are no priorities. The queue is first in, first out
 - Pending `settle` calls and the entries a queue could not send in 25 seconds at shutdown are lost
 
+## Development
+
+```sh
+lute run tests
+stylua --config-path stylua.toml --check src tests
+rojo sourcemap default.project.json --output sourcemap.json
+luau-lsp analyze --definitions=globalTypes.d.luau --sourcemap=sourcemap.json src tests
+```
+
 ## License
 
 MIT
